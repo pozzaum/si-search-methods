@@ -62,7 +62,7 @@ class DepthFirstSearch():
 
 
 
-    def _dfs_algorithm(self):
+    def dfs_algorithm(self):
         for i in range(self.mazeClass.depth):
             for j in range(self.mazeClass.width):
                 if (self.mazeClass.maze[i][j] > WALL_FLAG) and (self.color[i][j] == "WHITE"):
@@ -75,10 +75,6 @@ class DepthFirstSearch():
 
     def _dfs_visit(self, u):
 
-        if(self.mazeClass.maze[u] == END_FLAG):
-            self.mirror_solution[u] = END_FLAG
-            return
-        
         self.iteration += 1
         self.discovery[u] = self.iteration
         self.color[u] = "GREY"
@@ -108,10 +104,12 @@ class DepthFirstSearch():
 if __name__ == "__main__":
     mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)
     depthFirstSearch = DepthFirstSearch(mazeClass)
-    depthFirstSearch._dfs_algorithm()
+    depthFirstSearch.dfs_algorithm()
 
     print(mazeClass.maze, "\n")
     print(mazeClass._solution, "\n")
-    print(depthFirstSearch.mirror_solution, "\n")
+    #print(depthFirstSearch.mirror_solution, "\n")
+    #print(depthFirstSearch.color, "\n")
+    #print(depthFirstSearch.father, "\n")
     if (mazeClass.maze == depthFirstSearch.mirror_solution).all():
         print("Possivel erro: dfs igual a labirinto")

@@ -34,8 +34,8 @@
 import numpy
 from maze_generator import Maze 
 
-MAZE_DEPTH = 10
-MAZE_WIDTH = 10
+MAZE_DEPTH = 8
+MAZE_WIDTH = 8
 
 WALL_FLAG = 0
 ROUTE_FLAG = 1
