@@ -37,20 +37,25 @@ from maze_generator import Maze
 MAZE_DEPTH = 10
 MAZE_WIDTH = 10
 
-class BreadthFirstSearch(Maze):
-    def __init__(self, depth, width):
-        super().__init__(depth, width)
+WALL_FLAG = 0
+ROUTE_FLAG = 1
+INIT_FLAG = 2
+END_FLAG = 3
+
+class BreadthFirstSearch():
+    def __init__(self, maze):
+        self.maze = maze
         self.i = 0
         self.j = 0
         self.iterations = 0
-        #self.possibilities = {"UP": 'Y', "D": 'A', "LEFT": 'X', "RIGHT": 'B'}
-        self.color = numpy.full((self.depth, self.width), "WHITE", dtype=object)
-        self.father = numpy.full((self.depth, self.width), "NIL",dtype=object)
-        self.distance = numpy.full((self.depth, self.width), numpy.iinfo(numpy.int64).max, dtype=int)
+        self.color = numpy.full((self.maze.depth, self.maze.width), "WHITE", dtype=object)
+        self.father = numpy.full((self.maze.depth, self.maze.width), "NIL",dtype=object)
+        self.distance = numpy.full((self.maze.depth, self.maze.width), numpy.iinfo(numpy.int64).max, dtype=int)
 
 
 if __name__ == "__main__":
-    breadthFirstSearch = BreadthFirstSearch(MAZE_DEPTH, MAZE_WIDTH)
+    maze = Maze(MAZE_DEPTH, MAZE_WIDTH)
+    breadthFirstSearch = BreadthFirstSearch(maze)
     print(breadthFirstSearch.color, "\n")
     print(breadthFirstSearch.father, "\n")
     print(breadthFirstSearch.distance, "\n")

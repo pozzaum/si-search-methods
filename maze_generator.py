@@ -1,11 +1,19 @@
 """"
 @brief  Esse arquivo contém a classe Maze, responsável por gerar 
-        o labirinto randômico. Essa classe será herdada pelos 
-        algoritmos de solução.
+        o labirinto de maneira pseudo-randômica. os algoritmos de 
+        solução usarão essa classe em uma composição.
 """
 
 import numpy
 import random
+
+MAZE_DEPTH = 10
+MAZE_WIDTH = 10
+
+WALL_FLAG = 0
+ROUTE_FLAG = 1
+INIT_FLAG = 2
+END_FLAG = 3
 
 class Maze:
 
@@ -15,83 +23,79 @@ class Maze:
         self.__i = 0
         self.__j = 0
         self.maze = numpy.zeros((depth, width), dtype=int)
-        self.__solution = numpy.zeros((depth, width), dtype=int)
+        self._solution = numpy.zeros((depth, width), dtype=int)
         self._generate_maze()
         self._trace_route()
 
+
     def _generate_maze(self):
-        for __i in range(self.depth):
-            for __j in range(self.width):
-                if (__i == 0) or (__i == self.depth - 1):
-                    self.maze[__i][__j] = 0
+        for i in range(self.depth):
+            for j in range(self.width):
+                if (i == 0) or (i == self.depth - 1):
+                    self.maze[i][j] = WALL_FLAG
                 else: 
-                    self.maze[__i][__j] = random.choices(
-                        [0, 1],
-                        weights=[70, 30],
+                    self.maze[i][j] = random.choices(
+                        [WALL_FLAG, ROUTE_FLAG],
+                        weights=[65, 35],
                         k=1
                     )[0]
 
-    def _walk_in_width(self):
-        width_decision = random.choices(["left", "right"], k=1)[0]
 
-        if width_decision == "left" and self.__j > 0:
-            self.__j -= 1
-            self.maze[self.__i][self.__j] = 1
-            self.__solution[self.__i][self.__j] = 1
+    def __walk_in_maze(self):
 
-        elif width_decision == "right" and self.__j < (self.width - 1):
-            self.__j += 1
-            self.maze[self.__i][self.__j] = 1
-            self.__solution[self.__i][self.__j ] = 1
+        ngbr = [(self.__i - 1,     self.__j) if (self.__i - 1) >= 0         else None,      #up
+                (self.__i + 1,     self.__j) if (self.__i + 1) < self.depth else None,      #down
+                (self.__i    , self.__j - 1) if (self.__j - 1) >= 0         else None,      #left
+                (self.__i    , self.__j + 1) if (self.__j + 1) < self.width else None]      #right
 
-        elif width_decision == "left" and self.__j == 0:
-            self.__j += 1
-            self.maze[self.__i][self.__j] = 1
-            self.__solution[self.__i][self.__j] = 1
+        route_decision = random.randint(1, 3)       #up move is blocked to avoid infinite recursion
+        if ngbr[route_decision] is None: return self.__walk_in_maze()
 
-        elif width_decision == "right" and self.__j == (self.width -1):
-            self.__j -= 1  
-            self.maze[self.__i][self.__j] = 1
-            self.__solution[self.__i][self.__j] = 1        
+        match route_decision:
+            case 0:
+                self.__i -= 1
+                self.maze[self.__i][self.__j] = 1
+                self._solution[self.__i][self.__j] = 1
 
+            case 1:
+                self.__i += 1
+                self.maze[self.__i][self.__j] = 1
+                self._solution[self.__i][self.__j ] = 1
 
-    def _walk_in_depth(self):
-        self.__i += 1
-        self.maze[self.__i][self.__j] = 1
-        self.__solution[self.__i][self.__j] = 1
+            case 2:
+                self.__j -= 1
+                self.maze[self.__i][self.__j] = 1
+                self._solution[self.__i][self.__j] = 1
+
+            case 3:
+                self.__j += 1
+                self.maze[self.__i][self.__j] = 1
+                self._solution[self.__i][self.__j] = 1
 
 
     def _trace_route(self):
 
-        if self.__i == 0:
-            self.__j = random.randint(0, self.width - 1)
-            self.maze[self.__i][self.__j] = 2
-            self.__solution[self.__i][self.__j] = 2
-            self._walk_in_depth()
-
         if self.__i == (self.depth - 1):
-            self.maze[self.__i][self.__j] = 3
-            self.__solution[self.__i][self.__j] = 3
+            self.maze[self.__i][self.__j] = END_FLAG
+            self._solution [self.__i][self.__j] = END_FLAG
             self.__i = 0
             self.__j = 0
             return
-
-        route_decision = random.choices(["width", "depth"], k=1)[0]
         
-        if route_decision == "width":
-            self._walk_in_width()
-        elif route_decision == "depth":
-            self._walk_in_depth()
+        elif self.__i == 0:
+            self.__j = random.randint(0, self.width - 1)
+            self.maze[self.__i][self.__j] = INIT_FLAG
+            self._solution [self.__i][self.__j] = INIT_FLAG
+            self.maze[self.__i + 1][self.__j] = ROUTE_FLAG
+            self._solution [self.__i + 1][self.__j] = ROUTE_FLAG
+            self.__i += 1
+
+        else: 
+            self.__walk_in_maze()
 
         self._trace_route()
 
 
 if __name__ == "__main__":
-    maze = Maze(20, 20)
-
-    """
-    print(maze.__i, "\n")
-    print(maze.__j, "\n")
-    """
-    #print(maze.__solution, "\n")
+    maze = Maze(MAZE_DEPTH, MAZE_WIDTH)
     print(maze.maze, "\n")
