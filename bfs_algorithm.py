@@ -35,10 +35,11 @@
 """
 
 import numpy
+from collections import deque
 from maze_generator import Maze 
 
-MAZE_DEPTH = 8
-MAZE_WIDTH = 8
+MAZE_DEPTH = 20
+MAZE_WIDTH = 20
 
 WALL_FLAG = 0
 ROUTE_FLAG = 1
@@ -46,19 +47,64 @@ INIT_FLAG = 2
 END_FLAG = 3
 
 class BreadthFirstSearch():
-    def __init__(self, maze):
-        self.maze = maze
-        self.i = 0
-        self.j = 0
+    def __init__(self, mazeClass):
+        self.mazeClass = mazeClass
+        self.__u = (0, 0)
+        self.__v = [(0, 0),
+                    (0, 0),
+                    (0, 0),
+                    (0, 0)]
         self.iterations = 0
-        self.color = numpy.full((self.maze.depth, self.maze.width), "WHITE", dtype=object)
-        self.father = numpy.full((self.maze.depth, self.maze.width), "NIL",dtype=object)
-        self.distance = numpy.full((self.maze.depth, self.maze.width), numpy.iinfo(numpy.int64).max, dtype=int)
+        self.mirror_solution = numpy.zeros((self.mazeClass.depth, self.mazeClass.width), dtype=int)
+        self.color = numpy.full((self.mazeClass.depth, self.mazeClass.width), "WHITE", dtype=object)
+        self.distance = numpy.full((self.mazeClass.depth, self.mazeClass.width), numpy.iinfo(numpy.int64).max, dtype=int)
+        self.father = numpy.full((self.mazeClass.depth, self.mazeClass.width), "NIL",dtype=object)
 
+
+    def bfs_algorithm(self, s):
+        self.color[s] = "CINZA"
+        self.distance[s] = 0
+        self.father[s] = "NIL"
+
+        Q = deque()
+        self.__bfs_enqueue(Q, s)
+
+        while Q:
+            self.__u = self.__bfs_dequeue(Q)
+
+            self.__v = [(self.__u[0] - 1,     self.__u[1]) if (self.__u[0] - 1) >= 0                   else None,
+                        (self.__u[0] + 1,     self.__u[1]) if (self.__u[0] + 1) < self.mazeClass.depth else None,
+                        (self.__u[0]    , self.__u[1] - 1) if (self.__u[1] - 1) >= 0                   else None,
+                        (self.__u[0]    , self.__u[1] + 1) if (self.__u[1] + 1) < self.mazeClass.width else None]
+            
+            for i in range (len(self.__v)):
+                if (self.__v[i] is not None) and (self.mazeClass.maze[self.__v[i]] > WALL_FLAG) and (self.color[self.__v[i]] == "WHITE"):
+                    self.color[self.__v[i]] = "GREY"
+                    self.distance[self.__v[i]] = self.distance[self.__u] + 1
+                    self.father[self.__v[i]] = self.__u
+                    self.__bfs_enqueue(Q, self.__v[i])
+
+            self.color[self.__u] = "BLACK"
+            self.mirror_solution[self.__u] = ROUTE_FLAG
+
+
+    def __bfs_enqueue(self, Q, s):
+        return Q.append(s)
+
+
+    def __bfs_dequeue(self, Q):
+        s = (0,0)
+        return Q.popleft()
 
 if __name__ == "__main__":
-    maze = Maze(MAZE_DEPTH, MAZE_WIDTH)
-    breadthFirstSearch = BreadthFirstSearch(maze)
-    print(breadthFirstSearch.color, "\n")
-    print(breadthFirstSearch.father, "\n")
-    print(breadthFirstSearch.distance, "\n")
+    mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)
+    breadthFirstSearch = BreadthFirstSearch(mazeClass)
+    breadthFirstSearch.bfs_algorithm((0, 0))
+
+    print(mazeClass.maze, "\n")
+    print(mazeClass._solution, "\n")
+    print(breadthFirstSearch.mirror_solution, "\n")
+    #print(depthFirstSearch.color, "\n")
+    #print(depthFirstSearch.father, "\n")
+    if (mazeClass.maze == breadthFirstSearch.mirror_solution).all():
+        print("Possivel erro: bfs igual a labirinto")

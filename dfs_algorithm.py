@@ -7,13 +7,13 @@
             DFS(G):
 
             para cada vértice u ∈ G.V faça
-                color[u] ← WHITE
-                father[u] ← NIL
+                cor[u] ← BRANCO
+                pai[u] ← NIL
 
             tempo ← 0
 
             para cada vértice u ∈ G.V faça
-                se color[u] = WHITE então
+                se cor[u] = BRANCO então
                     DFS_VISIT(G, u)
 
             DFS_VISIT(G, u):
@@ -21,14 +21,14 @@
             tempo ← tempo + 1
             descoberta[u] ← tempo
 
-            color[u] ← GREY
+            cor[u] ← CINZA
 
             para cada vértice v ∈ G.Adj[u] faça
-                se color[v] = WHITE então
-                    father[v] ← u
+                se cor[v] = BRANCO então
+                    pai[v] ← u
                     DFS_VISIT(G, v)
 
-            color[u] ← BLACK
+            cor[u] ← PRETO
 
             tempo ← tempo + 1
             finalizacao[u] ← tempo
