@@ -29,6 +29,9 @@
                         ENFILEIRA(Q, v)
 
                 cor[u] ← PRETO
+
+@reference  CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford.
+            Introduction to Algorithms. 4. ed. Cambridge: MIT Press, 2022.
 """
 
 import numpy

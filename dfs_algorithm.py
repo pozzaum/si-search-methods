@@ -32,6 +32,9 @@
 
             tempo ← tempo + 1
             finalizacao[u] ← tempo
+
+@reference  CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford.
+            Introduction to Algorithms. 4. ed. Cambridge: MIT Press, 2022.
 """
 
 import numpy
@@ -70,10 +73,10 @@ class DepthFirstSearch():
                     if(self.mazeClass.maze[self.__u] == END_FLAG): 
                         return
                     else:
-                        self._dfs_visit(self.__u)
+                        self.__dfs_visit(self.__u)
 
 
-    def _dfs_visit(self, u):
+    def __dfs_visit(self, u):
 
         self.iteration += 1
         self.discovery[u] = self.iteration
@@ -88,7 +91,7 @@ class DepthFirstSearch():
         for i in range (len(self.__v)):
             if (self.__v[i] is not None) and (self.mazeClass.maze[self.__v[i]] > WALL_FLAG) and (self.color[self.__v[i]] == "WHITE"):
                 self.father[self.__v[i]] = (u)
-                self._dfs_visit(self.__v[i])
+                self.__dfs_visit(self.__v[i])
 
         self.color[u] = "BLACK"
 

@@ -1,7 +1,7 @@
 """"
 @brief  Esse arquivo contém a classe Maze, responsável por gerar 
         o labirinto de maneira pseudo-randômica. os algoritmos de 
-        solução usarão essa classe em uma composição.
+        solução usarão essa classe em forma de composição.
 """
 
 import numpy
@@ -24,11 +24,11 @@ class Maze:
         self.__j = 0
         self.maze = numpy.zeros((depth, width), dtype=int)
         self._solution = numpy.zeros((depth, width), dtype=int)
-        self._generate_maze()
-        self._trace_route()
+        self.__generate_maze()
+        self.__trace_route()
 
 
-    def _generate_maze(self):
+    def __generate_maze(self):
         for i in range(self.depth):
             for j in range(self.width):
                 if (i == 0) or (i == self.depth - 1):
@@ -48,7 +48,7 @@ class Maze:
                 (self.__i    , self.__j - 1) if (self.__j - 1) >= 0         else None,      #left
                 (self.__i    , self.__j + 1) if (self.__j + 1) < self.width else None]      #right
 
-        route_decision = random.randint(1, 3)       #up move is blocked to avoid infinite recursion
+        route_decision = random.randint(1, 3)       #up movement is blocked to avoid infinite recursion
         if ngbr[route_decision] is None: return self.__walk_in_maze()
 
         match route_decision:
@@ -73,7 +73,7 @@ class Maze:
                 self._solution[self.__i][self.__j] = 1
 
 
-    def _trace_route(self):
+    def __trace_route(self):
 
         if self.__i == (self.depth - 1):
             self.maze[self.__i][self.__j] = END_FLAG
@@ -93,7 +93,7 @@ class Maze:
         else: 
             self.__walk_in_maze()
 
-        self._trace_route()
+        self.__trace_route()
 
 
 if __name__ == "__main__":
