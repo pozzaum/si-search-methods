@@ -108,11 +108,8 @@ if __name__ == "__main__":
     mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)
     depthFirstSearch = DepthFirstSearch(mazeClass)
     depthFirstSearch.dfs_algorithm()
-
     print(mazeClass.maze, "\n")
     print(mazeClass._solution, "\n")
-    #print(depthFirstSearch.mirror_solution, "\n")
-    #print(depthFirstSearch.color, "\n")
-    #print(depthFirstSearch.father, "\n")
-    if (mazeClass.maze == depthFirstSearch.mirror_solution).all():
-        print("Possivel erro: dfs igual a labirinto")
+    print(depthFirstSearch.mirror_solution, "\n")
+    print(depthFirstSearch.color, "\n")
+    print(depthFirstSearch.father, "\n")

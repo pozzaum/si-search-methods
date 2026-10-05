@@ -62,6 +62,9 @@ class BreadthFirstSearch():
 
 
     def bfs_algorithm(self, s):
+        for j in range (self.mazeClass.width) :
+            if self.mazeClass.maze[0][j]: s = (0, j)
+
         self.color[s] = "CINZA"
         self.distance[s] = 0
         self.father[s] = "NIL"
@@ -85,7 +88,12 @@ class BreadthFirstSearch():
                     self.__bfs_enqueue(Q, self.__v[i])
 
             self.color[self.__u] = "BLACK"
-            self.mirror_solution[self.__u] = ROUTE_FLAG
+            if self.__u[0] == 0:
+                self.mirror_solution[self.__u] = INIT_FLAG
+            elif self.__u[0] == (self.mazeClass.depth - 1):
+                self.mirror_solution[self.__u] = END_FLAG
+            else:
+                self.mirror_solution[self.__u] = ROUTE_FLAG
 
 
     def __bfs_enqueue(self, Q, s):
@@ -93,18 +101,15 @@ class BreadthFirstSearch():
 
 
     def __bfs_dequeue(self, Q):
-        s = (0,0)
         return Q.popleft()
+
 
 if __name__ == "__main__":
     mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)
     breadthFirstSearch = BreadthFirstSearch(mazeClass)
     breadthFirstSearch.bfs_algorithm((0, 0))
-
     print(mazeClass.maze, "\n")
     print(mazeClass._solution, "\n")
     print(breadthFirstSearch.mirror_solution, "\n")
-    #print(depthFirstSearch.color, "\n")
-    #print(depthFirstSearch.father, "\n")
-    if (mazeClass.maze == breadthFirstSearch.mirror_solution).all():
-        print("Possivel erro: bfs igual a labirinto")
+    print(breadthFirstSearch.color, "\n")
+    print(breadthFirstSearch.father, "\n")
