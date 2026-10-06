@@ -1,4 +1,6 @@
 """
+@authors    Gabriela Guse Machado e Pedro Santos Pozza
+
 @brief      Esse arquivo contém a implementação da busca em largura
             e demais métodos necessários.
 
@@ -38,8 +40,8 @@ import numpy
 from collections import deque
 from maze_generator import Maze 
 
-MAZE_DEPTH = 20
-MAZE_WIDTH = 20
+MAZE_DEPTH = 10
+MAZE_WIDTH = 10
 
 WALL_FLAG = 0
 ROUTE_FLAG = 1
@@ -108,8 +110,17 @@ if __name__ == "__main__":
     mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)
     breadthFirstSearch = BreadthFirstSearch(mazeClass)
     breadthFirstSearch.bfs_algorithm((0, 0))
+
+    print("METODO BFS:\n")
+    print("Labirinto gerado:\n")
     print(mazeClass.maze, "\n")
-    print(mazeClass._solution, "\n")
+    print("Caminho gerado randomicamente:\n")
+    print(mazeClass.get_solution(), "\n")
+    print("Caminho encontrado pelo algoritmo BFS:\n")
     print(breadthFirstSearch.mirror_solution, "\n")
+    print("Cores dos vertices:\n")
     print(breadthFirstSearch.color, "\n")
+    print("Vertices pais:\n")
     print(breadthFirstSearch.father, "\n")
+    print("Distancias:\n")
+    print(breadthFirstSearch.distance, "\n")

@@ -1,6 +1,8 @@
 """
-@brief      
-Esse arquivo contém a implementação da busca em profundidade e demais métodos necessários.
+@authors    Gabriela Guse Machado e Pedro Santos Pozza
+
+@brief      Esse arquivo contém a implementação da busca em profundidade 
+            e demais métodos necessários.
 
 @details    pseudocódigo:
 
@@ -33,18 +35,18 @@ Esse arquivo contém a implementação da busca em profundidade e demais método
             tempo ← tempo + 1
             finalizacao[u] ← tempo
 
-@note       
-A implementação mantém a estrutura principal da DFS apresentada no pseudocódigo de referência, porém contém adaptações específicas para o problema do labirinto.
+@note   A implementação mantém a estrutura principal da DFS apresentada no pseudocódigo de 
+        referência, porém contém adaptações específicas para o problema do labirinto.
 
-   Principais adaptações:
-            - A busca é iniciada exclusivamente no ponto INIT_FLAG.
-            - Apenas células diferentes de WALL_FLAG são consideradas vértices
-              acessíveis.
-            - A adjacência é determinada pelas quatro posições vizinhas da
-              matriz: cima, baixo, esquerda e direita.
-            - A busca é interrompida quando END_FLAG é encontrado.
-            - mirror_solution é utilizado apenas para registrar as células
-              exploradas pelo algoritmo.
+        Principais adaptações:
+                    - A busca é iniciada exclusivamente no ponto INIT_FLAG.
+                    - Apenas células diferentes de WALL_FLAG são consideradas vértices
+                    acessíveis.
+                    - A adjacência é determinada pelas quatro posições vizinhas da
+                    matriz: cima, baixo, esquerda e direita.
+                    - A busca é interrompida quando END_FLAG é encontrado.
+                    - mirror_solution é utilizado apenas para registrar as células
+                    exploradas pelo algoritmo.
 
 @reference  CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford.
             Introduction to Algorithms. 4. ed. Cambridge: MIT Press, 2022.
@@ -53,8 +55,8 @@ A implementação mantém a estrutura principal da DFS apresentada no pseudocód
 import numpy
 from maze_generator import Maze
 
-MAZE_DEPTH = 20
-MAZE_WIDTH = 20
+MAZE_DEPTH = 10
+MAZE_WIDTH = 10
 
 WALL_FLAG = 0
 ROUTE_FLAG = 1
@@ -161,8 +163,19 @@ if __name__ == "__main__":
     mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)
     depthFirstSearch = DepthFirstSearch(mazeClass)
     depthFirstSearch.dfs_algorithm()
+
+    print("METODO DFS:\n")
+    print("Labirinto gerado:\n")
     print(mazeClass.maze, "\n")
-    print(mazeClass._solution, "\n")
+    print("Caminho gerado randomicamente:\n")
+    print(mazeClass.get_solution(), "\n")
+    print("Caminho encontrado pelo algoritmo DFS:\n")
     print(depthFirstSearch.mirror_solution, "\n")
+    print("Cores dos vertices:\n")
     print(depthFirstSearch.color, "\n")
+    print("Vertices pais:\n")
     print(depthFirstSearch.father, "\n")
+    print("Tempo de descoberta:\n")
+    print(depthFirstSearch.discovery, "\n")
+    print("Tempo de finalizacao:\n")
+    print(depthFirstSearch.finalization, "\n")

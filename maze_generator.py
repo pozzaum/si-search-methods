@@ -1,4 +1,6 @@
 """"
+@authors    Gabriela Guse Machado e Pedro Santos Pozza
+
 @brief  Esse arquivo contém a classe Maze, responsável por gerar 
         o labirinto de maneira pseudo-randômica. os algoritmos de 
         solução usarão essa classe em forma de composição.
@@ -23,10 +25,12 @@ class Maze:
         self.__i = 0
         self.__j = 0
         self.maze = numpy.zeros((depth, width), dtype=int)
-        self._solution = numpy.zeros((depth, width), dtype=int)
+        self.__solution = numpy.zeros((depth, width), dtype=int)
         self.__generate_maze()
         self.__trace_route()
 
+    def get_solution(self):
+        return self.__solution
 
     def __generate_maze(self):
         for i in range(self.depth):
@@ -55,29 +59,29 @@ class Maze:
             case 0:
                 self.__i -= 1
                 self.maze[self.__i][self.__j] = 1
-                self._solution[self.__i][self.__j] = 1
+                self.__solution[self.__i][self.__j] = 1
 
             case 1:
                 self.__i += 1
                 self.maze[self.__i][self.__j] = 1
-                self._solution[self.__i][self.__j ] = 1
+                self.__solution[self.__i][self.__j ] = 1
 
             case 2:
                 self.__j -= 1
                 self.maze[self.__i][self.__j] = 1
-                self._solution[self.__i][self.__j] = 1
+                self.__solution[self.__i][self.__j] = 1
 
             case 3:
                 self.__j += 1
                 self.maze[self.__i][self.__j] = 1
-                self._solution[self.__i][self.__j] = 1
+                self.__solution[self.__i][self.__j] = 1
 
 
     def __trace_route(self):
 
         if self.__i == (self.depth - 1):
             self.maze[self.__i][self.__j] = END_FLAG
-            self._solution [self.__i][self.__j] = END_FLAG
+            self.__solution [self.__i][self.__j] = END_FLAG
             self.__i = 0
             self.__j = 0
             return
@@ -85,9 +89,9 @@ class Maze:
         elif self.__i == 0:
             self.__j = random.randint(0, self.width - 1)
             self.maze[self.__i][self.__j] = INIT_FLAG
-            self._solution [self.__i][self.__j] = INIT_FLAG
+            self.__solution [self.__i][self.__j] = INIT_FLAG
             self.maze[self.__i + 1][self.__j] = ROUTE_FLAG
-            self._solution [self.__i + 1][self.__j] = ROUTE_FLAG
+            self.__solution [self.__i + 1][self.__j] = ROUTE_FLAG
             self.__i += 1
 
         else: 
@@ -98,6 +102,8 @@ class Maze:
 
 if __name__ == "__main__":
     maze = Maze(MAZE_DEPTH, MAZE_WIDTH)
+    print("Labirinto gerado:\n")
     print(maze.maze, "\n")
-    print(maze._solution, "\n")
+    print("Caminho gerado randomicamente:\n")
+    print(maze.get_solution(), "\n")
 

@@ -1,4 +1,6 @@
 """
+@authors    Gabriela Guse Machado e Pedro Santos Pozza
+
 @brief  Esse arquivo contém a classe MazeRunner, responsável por
         aplicar os métodos de busca, comparar os resultados e entregar
         os outputs requeridos na descrição da avaliação
@@ -9,7 +11,6 @@ import numpy
 from maze_generator import Maze
 from bfs_algorithm import BreadthFirstSearch
 from dfs_algorithm import DepthFirstSearch
-
 
 MAZE_DEPTH = 10
 MAZE_WIDTH = 10
@@ -148,7 +149,7 @@ def show_single_maze_paths():
     print("LABIRINTO")
     print()
     print(mazeRunner.maze)
-    print("\nInício:", start)
+    print("\nInicio:", start)
     print("Fim:", end)
 
     # BFS
@@ -173,7 +174,7 @@ def show_single_maze_paths():
 
     else:
         print("BFS não encontrou um caminho válido.")
-    print("\nMATRIZ DE SAÍDA BFS")
+    print("\nMATRIZ DE SAIDA BFS")
     print(bfs.mirror_solution)
 
 
@@ -197,7 +198,7 @@ def show_single_maze_paths():
 
     else:
         print("DFS não encontrou um caminho válido.")
-    print("\nMATRIZ DE SAÍDA DFS")
+    print("\nMATRIZ DE SAIDA DFS")
     print(dfs.mirror_solution)
 
     
