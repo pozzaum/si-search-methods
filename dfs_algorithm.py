@@ -1,6 +1,6 @@
 """
-@brief      Esse arquivo contém a implementação da busca em profundidade
-            e demais métodos necessários.
+@brief      
+Esse arquivo contém a implementação da busca em profundidade e demais métodos necessários.
 
 @details    pseudocódigo:
 
@@ -33,12 +33,25 @@
             tempo ← tempo + 1
             finalizacao[u] ← tempo
 
+@note       
+A implementação mantém a estrutura principal da DFS apresentada no pseudocódigo de referência, porém contém adaptações específicas para o problema do labirinto.
+
+   Principais adaptações:
+            - A busca é iniciada exclusivamente no ponto INIT_FLAG.
+            - Apenas células diferentes de WALL_FLAG são consideradas vértices
+              acessíveis.
+            - A adjacência é determinada pelas quatro posições vizinhas da
+              matriz: cima, baixo, esquerda e direita.
+            - A busca é interrompida quando END_FLAG é encontrado.
+            - mirror_solution é utilizado apenas para registrar as células
+              exploradas pelo algoritmo.
+
 @reference  CORMEN, Thomas H.; LEISERSON, Charles E.; RIVEST, Ronald L.; STEIN, Clifford.
             Introduction to Algorithms. 4. ed. Cambridge: MIT Press, 2022.
 """
 
 import numpy
-from maze_generator import Maze 
+from maze_generator import Maze
 
 MAZE_DEPTH = 20
 MAZE_WIDTH = 20
@@ -52,57 +65,97 @@ class DepthFirstSearch():
     def __init__(self, mazeClass):
         self.mazeClass = mazeClass
         self.__u = (0, 0)
-        self.__v = [(0, 0),
-                    (0, 0),
-                    (0, 0),
-                    (0, 0)]
         self.iteration = 0
-        self.mirror_solution = numpy.zeros((self.mazeClass.depth, self.mazeClass.width), dtype=int)
-        self.color = numpy.full((self.mazeClass.depth, self.mazeClass.width), "WHITE", dtype=object)
-        self.father = numpy.full((self.mazeClass.depth, self.mazeClass.width), "NIL",dtype=object)
-        self.discovery = numpy.zeros((self.mazeClass.depth, self.mazeClass.width), dtype=int)
-        self.finalization = numpy.zeros((self.mazeClass.depth, self.mazeClass.width), dtype=int)
 
+        self.mirror_solution = numpy.zeros(
+            (self.mazeClass.depth, self.mazeClass.width),
+            dtype=int
+        )
 
+        self.color = numpy.full(
+            (self.mazeClass.depth, self.mazeClass.width),
+            "WHITE",
+            dtype=object
+        )
+
+        self.father = numpy.full(
+            (self.mazeClass.depth, self.mazeClass.width),
+            "NIL",
+            dtype=object
+        )
+
+        self.discovery = numpy.zeros(
+            (self.mazeClass.depth, self.mazeClass.width),
+            dtype=int
+        )
+
+        self.finalization = numpy.zeros(
+            (self.mazeClass.depth, self.mazeClass.width),
+            dtype=int
+        )
 
     def dfs_algorithm(self):
         for i in range(self.mazeClass.depth):
             for j in range(self.mazeClass.width):
-                if (self.mazeClass.maze[i][j] > WALL_FLAG) and (self.color[i][j] == "WHITE"):
+                if self.mazeClass.maze[i][j] == INIT_FLAG:
                     self.__u = (i, j)
-                    if(self.mazeClass.maze[self.__u] == END_FLAG): 
-                        return
-                    else:
-                        self.__dfs_visit(self.__u)
-
+                    self.__dfs_visit(self.__u)
+                    return
 
     def __dfs_visit(self, u):
-
         self.iteration += 1
         self.discovery[u] = self.iteration
         self.color[u] = "GREY"
-        self.mirror_solution[u] = ROUTE_FLAG
 
-        self.__v = [(u[0] - 1,     u[1]) if (u[0] - 1) >= 0                   else None,
-                    (u[0] + 1,     u[1]) if (u[0] + 1) < self.mazeClass.depth else None,
-                    (u[0]    , u[1] - 1) if (u[1] - 1) >= 0                   else None,
-                    (u[0]    , u[1] + 1) if (u[1] + 1) < self.mazeClass.width else None]
-        
-        for i in range (len(self.__v)):
-            if (self.__v[i] is not None) and (self.mazeClass.maze[self.__v[i]] > WALL_FLAG) and (self.color[self.__v[i]] == "WHITE"):
-                self.father[self.__v[i]] = (u)
-                self.__dfs_visit(self.__v[i])
-
-        self.color[u] = "BLACK"
-
-        if(self.mazeClass.maze[u] == INIT_FLAG):
+        if self.mazeClass.maze[u] == INIT_FLAG:
             self.mirror_solution[u] = INIT_FLAG
+        elif self.mazeClass.maze[u] == END_FLAG:
+            self.mirror_solution[u] = END_FLAG
         else:
             self.mirror_solution[u] = ROUTE_FLAG
+
+        if self.mazeClass.maze[u] == END_FLAG:
+            self.color[u] = "BLACK"
+            self.iteration += 1
+            self.finalization[u] = self.iteration
+
+            return True
+
+        neighbors = [
+            (u[0] - 1, u[1])
+            if (u[0] - 1) >= 0
+            else None,
+
+            (u[0] + 1, u[1])
+            if (u[0] + 1) < self.mazeClass.depth
+            else None,
+
+            (u[0], u[1] - 1)
+            if (u[1] - 1) >= 0
+            else None,
+
+            (u[0], u[1] + 1)
+            if (u[1] + 1) < self.mazeClass.width
+            else None
+        ]
+
+        for v in neighbors:
+            if (
+                v is not None
+                and self.mazeClass.maze[v] > WALL_FLAG
+                and self.color[v] == "WHITE"
+            ):
+                self.father[v] = u
+
+                if self.__dfs_visit(v):
+                    return True
+
+        self.color[u] = "BLACK"
 
         self.iteration += 1
         self.finalization[u] = self.iteration
 
+        return False
 
 if __name__ == "__main__":
     mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)

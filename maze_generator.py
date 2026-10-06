@@ -99,3 +99,5 @@ class Maze:
 if __name__ == "__main__":
     maze = Maze(MAZE_DEPTH, MAZE_WIDTH)
     print(maze.maze, "\n")
+    print(maze._solution, "\n")
+
