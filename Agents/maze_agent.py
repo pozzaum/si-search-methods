@@ -5,8 +5,8 @@ from spade.behaviour import OneShotBehaviour
 from spade.behaviour import FSMBehaviour, State
 from spade.message import Message
 from spade.template import Template
-from maze_generator import Maze
-from dfs_algorithm import DepthFirstSearch
+from Utils.maze_generator import Maze
+from Algorithms.dfs_algorithm import DepthFirstSearch
 
 MAZE_DEPTH = 10
 MAZE_WIDTH = 10
@@ -44,7 +44,7 @@ class InformRoute(State):
         ngbr = []
         if self.agent is not None:
 
-            mazeClass = self.agent.maze
+            mazeClass = self.agent.mazeClass
             row, col = self.agent.index
 
             ngbr = [

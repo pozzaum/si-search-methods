@@ -53,7 +53,7 @@
 """
 
 import numpy
-from maze_generator import Maze
+from Utils.maze_generator import Maze
 
 MAZE_DEPTH = 10
 MAZE_WIDTH = 10

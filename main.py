@@ -8,9 +8,9 @@
 
 import numpy
 
-from maze_generator import Maze
-from bfs_algorithm import BreadthFirstSearch
-from dfs_algorithm import DepthFirstSearch
+from Utils.maze_generator import Maze
+from Algorithms.bfs_algorithm import BreadthFirstSearch
+from Algorithms.dfs_algorithm import DepthFirstSearch
 
 MAZE_DEPTH = 10
 MAZE_WIDTH = 10
