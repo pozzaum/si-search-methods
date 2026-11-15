@@ -24,6 +24,7 @@ class Maze:
         self.width = width
         self.__i = 0
         self.__j = 0
+        self.entry_index = (0, 0)
         self.maze = numpy.zeros((depth, width), dtype=int)
         self.__solution = numpy.zeros((depth, width), dtype=int)
         self.__generate_maze()
@@ -92,6 +93,7 @@ class Maze:
             self.__solution [self.__i][self.__j] = INIT_FLAG
             self.maze[self.__i + 1][self.__j] = ROUTE_FLAG
             self.__solution [self.__i + 1][self.__j] = ROUTE_FLAG
+            self.entry_index = (self.__i, self.__j)
             self.__i += 1
 
         else: 
