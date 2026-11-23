@@ -1,32 +1,14 @@
 import spade
-from spade.agent import Agent
-from spade.behaviour import FSMBehaviour, State
+from spade.agent import Agent, CyclicBehaviour
+from spade.behaviour import FSMBehaviour, CyclicBehaviour
 from spade.message import Message
 from Utils.maze_generator import Maze
 
 MAZE_DEPTH = 10
 MAZE_WIDTH = 10
 
-STATE_RCV_REQUEST = "STATE_RCV_REQUEST"
-STATE_INFORM_ROUTE = "STATE_INFORM_ROUTE"
-STATE_RCV_ROUTE = "STATE_RCV_ROUTE"
-STATE_ACK_ROUTE = "STATE_ACK_ROUTE"
-STATE_RCV_QUERY = "STATE_RCV_QUERY"
-STATE_INFORM_OBJ = "STATE_INFORM_OBJ"
-STATE_CHK_OBJ = "STATE_CHK_OBJ"
 
-
-class FSMHandler(FSMBehaviour):
-    async def on_start(self):
-        print(f"FSM starting at initial state {self.current_state}")
-
-    async def on_end(self):
-        print(f"FSM finished at state {self.current_state}")
-        if self.agent is not None:
-            await self.agent.stop()
-
-
-class RcvRequest(State):
+class RcvRequest(CyclicBehaviour):
     async def run(self):
         tolerance = 10.0 
         print(f"RcvRequest Running...")
@@ -34,12 +16,11 @@ class RcvRequest(State):
         if request:
             request.set_metadata("performative", "request")
             print(f"Request succesfully received {format(request.body)}")
-            self.set_next_state(STATE_INFORM_ROUTE)
         else:
             print(f"No request received within {tolerance}s")
 
 
-class InformRoute(State):
+class InformRoute(CyclicBehaviour):
     async def run(self):
         print(f"InformRoute Running...")
 
@@ -82,10 +63,9 @@ class InformRoute(State):
         msg.body = f"{ngbr}"
         await self.send(msg)
         print(f"Route sent: {ngbr}")                   # Set the message content
-        self.set_next_state(STATE_RCV_ROUTE)
 
 
-class RcvRoute(State):
+class RcvRoute(CyclicBehaviour):
     async def run(self):
         tolerance = 10.0 
         print(f"RcvRoute Running...")
@@ -95,12 +75,11 @@ class RcvRoute(State):
             print(f"Route succesfully received {format(route.body)}")
             if self.agent is not None:
                 self.agent.choosen_route = route.body
-            self.set_next_state(STATE_ACK_ROUTE)
         else:
             print(f"No request received within {tolerance}s")
 
 
-class AckRoute(State):
+class AckRoute(CyclicBehaviour):
    async def run(self):
         print(f"AckRoute Running...")
 
@@ -156,10 +135,9 @@ class AckRoute(State):
         msg.body = f"{ack}"
         await self.send(msg)
         print(f"Acknowledged sent: {ack}")                   # Set the message content
-        self.set_next_state(STATE_RCV_QUERY)
 
 
-class RcvQuery(State):
+class RcvQuery(CyclicBehaviour):
     async def run(self):
         tolerance = 10.0 
         print(f"RcvQuery Running...")
@@ -169,12 +147,11 @@ class RcvQuery(State):
             print(f"Obj Query succesfully received {format(obj_chk.body)}")
             if self.agent is not None:
                 self.agent.choosen_route = obj_chk.body
-            self.set_next_state(STATE_CHK_OBJ)
         else:
             print(f"No request received within {tolerance}s")
 
 
-class ChkObj(State):
+class ChkObj(CyclicBehaviour):
    async def run(self):
         print(f"ChkObj Running...")
         chk = "Uninitialized"
@@ -196,14 +173,8 @@ class ChkObj(State):
         msg.body = f"{chk}"
         await self.send(msg)
         print(f"Route sent: {chk}")                   # Set the message content
-        if self.agent is not None:
-            if chk_flag and not self.agent.father_next: 
-                self.set_next_state(STATE_RCV_ROUTE)    #Father accomplished the objective. Son must continue to move.
+        #Son accomplished the objective. Agent is finished. No more CyclicBehaviours to be executed.        
 
-            if chk_flag and self.agent.father_next:
-                pass                                    #Son accomplished the objective. Agent is finished. No more states to be executed.        
-
-            else: self.set_next_state(STATE_RCV_REQUEST)
 
 
 class MazeAgent(Agent):
@@ -217,20 +188,12 @@ class MazeAgent(Agent):
         self.choosen_route = None
         self.father_next = True
 
-        fsm = FSMHandler()
-        fsm.add_state(name=STATE_RCV_REQUEST, state=RcvRequest(), initial=True)
-        fsm.add_state(name=STATE_INFORM_ROUTE, state=InformRoute())
-        fsm.add_state(name=STATE_RCV_ROUTE, state=RcvRoute())
-        fsm.add_state(name=STATE_ACK_ROUTE, state=AckRoute())
-        fsm.add_state(name=STATE_RCV_QUERY, state=RcvQuery())
-        fsm.add_state(name=STATE_INFORM_OBJ, state=ChkObj())
-        fsm.add_transition(source=STATE_RCV_REQUEST, dest=STATE_INFORM_ROUTE)
-        fsm.add_transition(source=STATE_INFORM_ROUTE, dest=STATE_RCV_ROUTE)
-        fsm.add_transition(source=STATE_RCV_ROUTE, dest=STATE_ACK_ROUTE)
-        fsm.add_transition(source=STATE_ACK_ROUTE, dest=STATE_RCV_QUERY)
-        fsm.add_transition(source=STATE_RCV_QUERY, dest=STATE_INFORM_OBJ)
-        fsm.add_transition(source=STATE_INFORM_OBJ, dest=STATE_ACK_ROUTE)
-        self.add_behaviour(fsm)
+        self.add_behaviour(RcvRequest())
+        self.add_behaviour(InformRoute())
+        self.add_behaviour(RcvRoute())
+        self.add_behaviour(AckRoute())
+        self.add_behaviour(RcvQuery())
+        self.add_behaviour(ChkObj())
 
 
 async def main():
