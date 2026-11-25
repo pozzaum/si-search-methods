@@ -1,5 +1,7 @@
 import spade
-from spade.agent import Agent, CyclicBehaviour
+import asyncio
+from spade.agent import Agent
+from spade.template import Template
 from spade.behaviour import FSMBehaviour, CyclicBehaviour
 from spade.message import Message
 from Utils.maze_generator import Maze
@@ -10,11 +12,11 @@ MAZE_WIDTH = 10
 
 class RcvRequest(CyclicBehaviour):
     async def run(self):
+        await asyncio.sleep(5.1)
         tolerance = 10.0 
-        print(f"RcvRequest Running...")
+        #print(f"RcvRequest Running...")
         request = await self.receive(tolerance)
-        if request:
-            request.set_metadata("performative", "request")
+        if request is not None:
             print(f"Request succesfully received {format(request.body)}")
         else:
             print(f"No request received within {tolerance}s")
@@ -22,37 +24,30 @@ class RcvRequest(CyclicBehaviour):
 
 class InformRoute(CyclicBehaviour):
     async def run(self):
-        print(f"InformRoute Running...")
+        await asyncio.sleep(5.2)
+        #print(f"InformRoute Running...")
 
         ngbr = []
         if self.agent is not None:
 
             mazeClass = self.agent.mazeClass
-            if self.agent.father_next:
-                row, col = self.agent.father_index
-
-            else:
-                row, col = self.agent.son_index
+            row, col = self.agent.user_index
 
             ngbr = [
-                "C"
-                if (mazeClass.maze[row - 1][col] - 1) >= 0 and
-                row - 1 >= 0
-                else None,
-
-                "B"
-                if (mazeClass.maze[row + 1][col] -1) >= 0 and
-                row + 1 <= mazeClass.depth - 1
-                else None,
-
                 "E"
-                if ((mazeClass.maze[row][col - 1] -1)  >= 0) and
-                col - 1 >= 0
+                if (col - 1 >= 0) and ((mazeClass.maze[row][col - 1] -1)  >= 0)
                 else None,
 
                 "D"
-                if (mazeClass.maze[row][col + 1] -1)  >= 0 and
-                col + 1 <= mazeClass.width - 1
+                if (col + 1 <= mazeClass.width - 1) and ((mazeClass.maze[row][col + 1] -1)  >= 0)
+                else None,
+
+                "C"
+                if (row - 1 >= 0) and ((mazeClass.maze[row - 1][col] - 1) >= 0)
+                else None,
+
+                "B"
+                if (row + 1 <= mazeClass.depth - 1) and ((mazeClass.maze[row + 1][col] -1) >= 0)
                 else None
             ]
 
@@ -67,11 +62,11 @@ class InformRoute(CyclicBehaviour):
 
 class RcvRoute(CyclicBehaviour):
     async def run(self):
+        await asyncio.sleep(5.3)
         tolerance = 10.0 
-        print(f"RcvRoute Running...")
+        #print(f"RcvRoute Running...")
         route = await self.receive(tolerance)
-        if route:
-            route.set_metadata("performative", "subscribe")
+        if route is not None:
             print(f"Route succesfully received {format(route.body)}")
             if self.agent is not None:
                 self.agent.choosen_route = route.body
@@ -81,54 +76,46 @@ class RcvRoute(CyclicBehaviour):
 
 class AckRoute(CyclicBehaviour):
    async def run(self):
-        print(f"AckRoute Running...")
+        await asyncio.sleep(5.4)
+        #print(f"AckRoute Running...")
 
         ack = None
         if self.agent is not None:
             choosen_route = self.agent.choosen_route
             mazeClass = self.agent.mazeClass
 
-            if self.agent.father_next:
-                row, col = self.agent.father_index
-                index = self.agent.father_index
-            else:
-                row, col = self.agent.son_index
-                index = self.agent.son_index
+            row, col = self.agent.user_index
+            index = self.agent.user_index
 
             print(f"Current index: {row}, {col}")
             print(f"Choosen route: {choosen_route}")
 
             match choosen_route:
-                case "['E']":
+                case 'E':
                     if (mazeClass.maze[row][col - 1] -1) >= 0 and (col - 1 >= 0):
                         ack = "ok"
                         index = (row, col - 1)
                     else: ack = "nok"
 
-                case "['D']":
+                case 'D':
                     if (mazeClass.maze[row][col + 1] -1) >= 0 and (row + 1 <= mazeClass.width - 1):
                         ack = "ok"
                         index = (row, col + 1)
                     else: ack = "nok"
 
-                case "['C']":
+                case 'C':
                     if (mazeClass.maze[row - 1][col] -1) >= 0 and (row - 1 >= 0):
                         ack = "ok"
                         index = (row - 1, col)
                     else: ack = "nok"
 
-                case "['B']":
+                case 'B':
                     if (mazeClass.maze[row + 1][col] -1) >= 0 and (row + 1 <= mazeClass.depth - 1):
                         ack = "ok"
                         index = (row + 1, col)
                     else: ack = "nok"
 
-            if self.agent.father_next:
-                self.agent.father_index = index
-                self.agent.father_next = False
-            else:
-                self.agent.son_index = index
-                self.agent.father_next = True
+            self.agent.user_index = index
 
         msg = Message(to="pai@xmpp.lan")     # Instantiate the message
         msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
@@ -139,11 +126,11 @@ class AckRoute(CyclicBehaviour):
 
 class RcvQuery(CyclicBehaviour):
     async def run(self):
+        await asyncio.sleep(5.5)
         tolerance = 10.0 
-        print(f"RcvQuery Running...")
+        #print(f"RcvQuery Running...")
         obj_chk = await self.receive(tolerance)
-        if obj_chk:
-            obj_chk.set_metadata("performative", "query-if")
+        if obj_chk is not None:
             print(f"Obj Query succesfully received {format(obj_chk.body)}")
             if self.agent is not None:
                 self.agent.choosen_route = obj_chk.body
@@ -153,46 +140,47 @@ class RcvQuery(CyclicBehaviour):
 
 class ChkObj(CyclicBehaviour):
    async def run(self):
-        print(f"ChkObj Running...")
+        await asyncio.sleep(5.6)
+        #print(f"ChkObj Running...")
         chk = "Uninitialized"
-        chk_flag = None
         if self.agent is not None:
             mazeClass = self.agent.mazeClass
-            row, col = self.agent.father_index
+            row, col = self.agent.user_index
 
             if (mazeClass.maze[row][col] == 3): 
                 chk = "Done"
-                chk_flag = True
-                self.agent.father_obj = True
+                self.agent.user_obj = True
             else: 
                 chk = "Failure"
-                chk_flag = False
 
         msg = Message(to="pai@xmpp.lan")     # Instantiate the message
         msg.set_metadata("performative", "inform")  # Set the "inform" FIPA performative
         msg.body = f"{chk}"
         await self.send(msg)
         print(f"Route sent: {chk}")                   # Set the message content
-        #Son accomplished the objective. Agent is finished. No more CyclicBehaviours to be executed.        
-
 
 
 class MazeAgent(Agent):
     async def setup(self):
         print(f"Agent {format(str(self.jid))} started")
         self.mazeClass = Maze(MAZE_DEPTH, MAZE_WIDTH)
-        self.father_index = self.mazeClass.entry_index
-        self.father_obj = False
-        self.son_index = self.mazeClass.entry_index
-        self.son_obj = False
+        self.user_index = self.mazeClass.entry_index
+        self.user_obj = False
         self.choosen_route = None
-        self.father_next = True
 
-        self.add_behaviour(RcvRequest())
+        template_rcvrqt = Template()
+        template_rcvrqt.set_metadata("performative", "request")
+        template_rcvrt = Template()
+        template_rcvrt.set_metadata("performative", "subscribe")
+        template_rcvqr = Template()
+        template_rcvqr.set_metadata("performative", "query-if")
+
+
+        self.add_behaviour(RcvRequest(), template_rcvrqt)
         self.add_behaviour(InformRoute())
-        self.add_behaviour(RcvRoute())
+        self.add_behaviour(RcvRoute(), template_rcvrt)
         self.add_behaviour(AckRoute())
-        self.add_behaviour(RcvQuery())
+        self.add_behaviour(RcvQuery(), template_rcvqr)
         self.add_behaviour(ChkObj())
 
 

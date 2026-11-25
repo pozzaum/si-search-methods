@@ -1,4 +1,4 @@
-
+import ast
 import spade
 
 from spade.agent import Agent
@@ -20,7 +20,6 @@ WAIT_OBJECTIVE = "WAIT_OBJECTIVE"
 
 # Estado 1: Enviar request(caminhos)
 class SendRequest(State):
-
     async def run(self):
         msg = Message(to=LABIRINTO_JID)
         msg.set_metadata("performative", "request")
@@ -35,7 +34,6 @@ class SendRequest(State):
 
 # Estado 2: Aguardar inform(direções)
 class WaitPaths(State):
-
     async def run(self):
 
         reply = await self.receive(timeout=15)
@@ -46,39 +44,63 @@ class WaitPaths(State):
 
         print(f"[PAI] Direções recebidas: {reply.body}")
 
-        if self.agent is not None:
-            self.agent.available_paths = reply.body
+        if (self.agent is not None) and (reply.body is not None):
+            self.agent.available_paths = ast.literal_eval(reply.body)
 
         self.set_next_state(SEND_SUBSCRIBE)
 
 
 # Estado 3: Enviar subscribe(direção)
 class SendSubscribe(State):
-
     async def run(self):
+        if self.agent is None:
+            return
+
+        direction = self.agent.choose_direction()
+
+        if direction is None:
+            print("[PAI] Não existem mais caminhos")
+            return
+
+        self.agent.chosen_direction = direction
+
         msg = Message(to=LABIRINTO_JID)
         msg.set_metadata("performative", "subscribe")
-        if self.agent is not None:
-            msg.body = self.agent.available_paths
+        msg.body = direction
 
         await self.send(msg)
 
-        print("[PAI] subscribe(direção) enviado")
+        print(f"[PAI] subscribe({direction}) enviado")
 
         self.set_next_state(WAIT_MOVEMENT)
 
 
 # Estado 4: Aguardar inform(ok/nok)
 class WaitMovement(State):
-
     async def run(self):
-        pass
-        self.set_next_state(SEND_QUERY)
+        reply = await self.receive(timeout=15)
+
+        if reply is None:
+            print("[PAI] Nenhuma resposta de movimento")
+            return
+
+        if self.agent is None:
+            return
+
+        if reply.body == "ok":
+            print("[PAI] Movimento confirmado")
+
+            self.agent.confirm_movement()
+
+            self.set_next_state(SEND_QUERY)
+
+        elif reply.body == "nok":
+            print("[PAI] Movimento recusado")
+            # Por enquanto, encerra a FSM.
 
 
 # Estado 5: Enviar query-if(objetivo)
 class SendQuery(State):
-
     async def run(self):
         pass
         self.set_next_state(WAIT_OBJECTIVE)
@@ -93,8 +115,75 @@ class WaitObjective(State):
 
 class FatherAgent(Agent):
 
-    async def setup(self):
+     def choose_direction(self):
+        movements = {
+            "C": (-1, 0),
+            "B": (1, 0),
+            "E": (0, -1),
+            "D": (0, 1)
+        }
+
+        row, col = self.current_position
+
+        # Procura uma posição ainda não visitada
+        for direction in self.available_paths:
+            dr, dc = movements[direction]
+            next_position = (row + dr, col + dc)
+
+            if next_position not in self.visited:
+                self.backtracking = False
+                return direction
+
+        # para onde volta caso não tenha novas posições
+        if self.path:
+            reverse = {
+                "C": "B",
+                "B": "C",
+                "E": "D",
+                "D": "E"
+            }
+
+            self.backtracking = True
+            return reverse[self.path[-1]]
+
+        return None
+
+     def confirm_movement(self):
+        movements = {
+            "C": (-1, 0),
+            "B": (1, 0),
+            "E": (0, -1),
+            "D": (0, 1)
+        }
+
+        if self.chosen_direction is not None:
+            row, col = self.current_position
+            dr, dc = movements[self.chosen_direction]
+
+            # atualiza a posição atual
+            self.current_position = (row + dr, col + dc)
+
+        if self.backtracking:
+            #remove o último da pilha
+            self.path.pop()
+        else:
+            #registra a nova posição visitada
+            self.visited.add(self.current_position)
+            self.path.append(self.chosen_direction)
+
+        print(f"[PAI] Posição atual: {self.current_position}")
+        print(f"[PAI] Visitados: {self.visited}")
+        print(f"[PAI] Caminho: {self.path}")
+
+     async def setup(self):
         print(f"[PAI] Conectado: {self.jid}")
+
+        self.current_position = (0, 0)
+        self.visited = {(0, 0)}
+        self.path = []
+        self.available_paths = []
+        self.chosen_direction = None
+        self.backtracking = False
 
         self.fsm = FSMBehaviour()
 
