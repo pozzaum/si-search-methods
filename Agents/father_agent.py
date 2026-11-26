@@ -6,9 +6,9 @@ from spade.behaviour import FSMBehaviour, State
 from spade.message import Message
 
 
-PAI_JID = "pai@xmpp.lan"
+PAI_JID = "pai@localhost"
 PAI_PASSWORD = "pai"
-LABIRINTO_JID = "labirinto@xmpp.lan"
+LABIRINTO_JID = "labirinto@localhost"
 
 SEND_REQUEST = "SEND_REQUEST"
 WAIT_PATHS = "WAIT_PATHS"
@@ -101,8 +101,16 @@ class WaitMovement(State):
 
 # Estado 5: Enviar query-if(objetivo)
 class SendQuery(State):
+
     async def run(self):
-        pass
+        msg = Message(to=LABIRINTO_JID)
+        msg.set_metadata("performative", "query-if")
+        msg.body = "objetivo"
+
+        await self.send(msg)
+
+        print("[PAI] query-if(objetivo) enviado")
+
         self.set_next_state(WAIT_OBJECTIVE)
 
 
@@ -110,7 +118,30 @@ class SendQuery(State):
 class WaitObjective(State):
 
     async def run(self):
-        pass
+        reply = await self.receive(timeout=15)
+        result = None
+
+        if reply is None:
+            print("[PAI] Nenhuma resposta sobre o objetivo")
+            return
+
+        if reply.body is not None:
+            result = reply.body.strip().lower()
+
+        print(f"[PAI] Resposta do objetivo: {result}")
+
+        if result == "done":
+            if self.agent is not None:
+                print("[PAI] Objetivo encontrado!")
+                print(f"[PAI] Caminho final: {self.agent.path}")
+                await self.agent.stop()
+
+        elif result == "failure":
+            print("[PAI] Objetivo não encontrado. Continuando busca...")
+            self.set_next_state(SEND_REQUEST)
+
+        else:
+            print(f"[PAI] Resposta inesperada: {repr(reply.body)}")
 
 
 class FatherAgent(Agent):
