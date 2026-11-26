@@ -1,7 +1,9 @@
+# type: ignore
 import ast
 import spade
 
 from spade.agent import Agent
+from spade.template import Template
 from spade.behaviour import FSMBehaviour, State
 from spade.message import Message
 
@@ -9,6 +11,7 @@ from spade.message import Message
 PAI_JID = "pai@localhost"
 PAI_PASSWORD = "pai"
 LABIRINTO_JID = "labirinto@localhost"
+FILHO_JID = "filho@localhost"
 
 SEND_REQUEST = "SEND_REQUEST"
 WAIT_PATHS = "WAIT_PATHS"
@@ -16,6 +19,8 @@ SEND_SUBSCRIBE = "SEND_SUBSCRIBE"
 WAIT_MOVEMENT = "WAIT_MOVEMENT"
 SEND_QUERY = "SEND_QUERY"
 WAIT_OBJECTIVE = "WAIT_OBJECTIVE"
+INFORM_SON = "INFORM_SON"
+SON_ACK = "SON_ACK"
 
 
 # Estado 1: Enviar request(caminhos)
@@ -44,7 +49,7 @@ class WaitPaths(State):
 
         print(f"[PAI] Direções recebidas: {reply.body}")
 
-        if (self.agent is not None) and (reply.body is not None):
+        if reply.body is not None:
             self.agent.available_paths = ast.literal_eval(reply.body)
 
         self.set_next_state(SEND_SUBSCRIBE)
@@ -131,10 +136,9 @@ class WaitObjective(State):
         print(f"[PAI] Resposta do objetivo: {result}")
 
         if result == "done":
-            if self.agent is not None:
-                print("[PAI] Objetivo encontrado!")
-                print(f"[PAI] Caminho final: {self.agent.path}")
-                await self.agent.stop()
+            print("[PAI] Objetivo encontrado!")
+            print(f"[PAI] Caminho final: {self.agent.path}")
+            self.set_next_state(INFORM_SON)
 
         elif result == "failure":
             print("[PAI] Objetivo não encontrado. Continuando busca...")
@@ -142,6 +146,31 @@ class WaitObjective(State):
 
         else:
             print(f"[PAI] Resposta inesperada: {repr(reply.body)}")
+
+
+class InformSon(State):
+    async def run(self):
+        msg = Message(to=FILHO_JID)
+        msg.set_metadata("performative", "propose")
+        msg_body = "".join(self.agent.path)
+        msg.body = msg_body
+
+        await self.send(msg)
+
+        print(f"[PAI] propose {msg.body} enviado")
+        self.set_next_state(SON_ACK)
+
+
+class SonAck(State):
+    async def run(self):
+        reply = await self.receive(timeout=15)
+
+        if reply is None:
+            print("[PAI] Filho se perdeu")
+
+        else:
+            if reply.body == "Cheguei":
+                print("[PAI]: Filho Chegou")
 
 
 class FatherAgent(Agent):
@@ -219,14 +248,14 @@ class FatherAgent(Agent):
         self.fsm = FSMBehaviour()
 
         #registro dos estados
-        self.fsm.add_state(
-            SEND_REQUEST, SendRequest(), initial=True
-        )
+        self.fsm.add_state(SEND_REQUEST, SendRequest(), initial=True)
         self.fsm.add_state(WAIT_PATHS, WaitPaths())
         self.fsm.add_state(SEND_SUBSCRIBE, SendSubscribe())
         self.fsm.add_state(WAIT_MOVEMENT, WaitMovement())
         self.fsm.add_state(SEND_QUERY, SendQuery())
         self.fsm.add_state(WAIT_OBJECTIVE, WaitObjective())
+        self.fsm.add_state(INFORM_SON, InformSon())
+        self.fsm.add_state(SON_ACK, SonAck())
 
         #registro das transições
         self.fsm.add_transition(SEND_REQUEST, WAIT_PATHS)
@@ -235,6 +264,8 @@ class FatherAgent(Agent):
         self.fsm.add_transition(WAIT_MOVEMENT, SEND_QUERY)
         self.fsm.add_transition(SEND_QUERY, WAIT_OBJECTIVE)
         self.fsm.add_transition(WAIT_OBJECTIVE, SEND_REQUEST)
+        self.fsm.add_transition(WAIT_OBJECTIVE, INFORM_SON)
+        self.fsm.add_transition(INFORM_SON, SON_ACK)
 
         self.add_behaviour(self.fsm)
 
